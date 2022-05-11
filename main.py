@@ -25,7 +25,7 @@ def cache_data():
     InventoryDf=pd.read_csv ('assets/data/inventory_new.csv')
     visitorsDf  = pd.read_excel('assets/data/visitors_dim.xlsx')
     df_revenue = pd.read_csv('assets/data/dRevenue_csv.csv')
-    df_product = pd.read_csv('assets/data/dProduct_csv.csv')
+    df_product = pd.read_csv('assets/data/dproduct_csv.csv')
     df_expense = pd.read_csv('assets/data/Expenses_csv.csv')
     df_Account = pd.read_csv('assets/data/dAccount_csv.csv')
     df_new = pd.read_csv('assets/data/CustomerOverView.csv')
