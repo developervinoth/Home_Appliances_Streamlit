@@ -1,3 +1,4 @@
+from turtle import title
 import streamlit as st
 import pandas as pd
 
@@ -22,9 +23,10 @@ st.set_page_config(layout="wide")
 def cache_data():
     transactionsDf = pd.read_excel('assets/data/TransactionsDim.xlsx')
     InventoryDf=pd.read_csv ('assets/data/inventory_new.csv')
-    return transactionsDf, InventoryDf
+    visitorsDf  = pd.read_excel('assets/data/visitors_dim.xlsx')
+    return transactionsDf, InventoryDf, visitorsDf
 
-transactionsDf, InventoryDf = cache_data()
+transactionsDf, InventoryDf, visitorsDf = cache_data()
 
 
 sideBarSelection = st.sidebar.selectbox(options=['EMI Simulator', 'Foot Traffic vs Digital Traffic', 'Inventory Control'], label='Select Page')
@@ -107,72 +109,139 @@ if sideBarSelection == 'EMI Simulator':
     emiDf_grouped.reset_index(inplace=True)
 
     st.subheader('EMI Repayment Schedule')
+  
+    emiDf_grouped['Month'] = emiDf_grouped['monthOfDate'].apply(lambda value: calendar.month_name[value])
 
-    st.table(emiDf_grouped)
+
+    emiDf_grouped.rename(columns={'yearOfDate': 'Year', 'monthWiseEmi': 'Loan Paid to Date'}, inplace=True)
+    print(emiDf_grouped)
+    st.table(emiDf_grouped[['Year','Month','Loan Paid to Date']])
 
 
 elif sideBarSelection == 'Foot Traffic vs Digital Traffic':
     st.title('Foot Traffic vs Digital Traffic')
     # To Calculate total Transaction Count
 
+    col1, col2, col3,col4 = st.columns(4)
+    # st.write('Total Transactions Count')
+    with col1:
+        totalTransactionCount  = transactionsDf['transactionId'].count()
+    # st.header(totalTransactionCount)
 
-    st.write('Total Transactions Count')
-    totalTransactionCount  = transactionsDf['transactionId'].count()
-    st.header(totalTransactionCount)
+        st.markdown("<h5 style='text-align: center;'>Total Transactions Count</h5>", unsafe_allow_html=True)
+        st.markdown("<h2 style='text-align: center; '>"+str(totalTransactionCount)+"</h2>", unsafe_allow_html=True)
+    
+    with col2:
+        footTraffic = len(visitorsDf[visitorsDf['modeOfVisit'] == 'Store'])
+        st.markdown("<h5 style='text-align: center;'>Foot Traffic</h5>", unsafe_allow_html=True)
+        st.markdown("<h2 style='text-align: center; '>"+str(footTraffic)+"</h2>", unsafe_allow_html=True)
+
+    with col3:
+        digitalTraffic = len(visitorsDf[visitorsDf['modeOfVisit'] == 'Online'])
+        st.markdown("<h5 style='text-align: center;'>Digital Traffic</h5>", unsafe_allow_html=True)
+        st.markdown("<h2 style='text-align: center; '>"+str(digitalTraffic)+"</h2>", unsafe_allow_html=True)
+
+    with col4:
+
+        uniqueCustomers = transactionsDf.groupby('customerId').count().reset_index()['customerId'].count()
+        st.markdown("<h5 style='text-align: center;'>Overall Conversion Rate</h5>", unsafe_allow_html=True)
+        st.markdown("<h2 style='text-align: center; '>"+str(round(uniqueCustomers/(len(visitorsDf)) * 100, 2))+"%</h2>", unsafe_allow_html=True)
+        
+
+
     lineGraph = pd.DataFrame(transactionsDf.groupby('month').count()['transactionId']).reset_index()
     lineGraph = Sort_Dataframeby_Month(df=lineGraph,monthcolumnname='month')
     fig = go.Figure()
-    fig = px.line(lineGraph, x="month", y="transactionId", labels = {'month': 'Month', 'transactionId': 'Transactions'})
+    fig = px.line(lineGraph, x="month", y="transactionId", labels = {'month': 'Month', 'transactionId': 'Transactions'}, title="Month wise Total Transactions")
+    fig.update_layout(
+            height = 300,)
     st.plotly_chart(fig, use_container_width = True)
 
     col1, col2 = st.columns(2)
 
     with col1:
         # To Calculate Transaction count of Store Visitors
-        st.write('Transactions Count on Store')
+        # st.write('Transactions Count on Store')
         storeTransactionCount  = transactionsDf[transactionsDf['modeOfVisit'] == 'Store']['transactionId'].count()
-        st.header(storeTransactionCount)
+        # st.header(storeTransactionCount)
+
+        st.markdown("<h5 style='text-align: center;'>Transactions Count on Store</h5>", unsafe_allow_html=True)
+        st.markdown("<h2 style='text-align: center; '>"+str(storeTransactionCount)+"</h2>", unsafe_allow_html=True)
+        
 
         lineGraph = pd.DataFrame(transactionsDf[transactionsDf['modeOfVisit']=='Store'].groupby('month').count()['transactionId']).reset_index()
         lineGraph = Sort_Dataframeby_Month(df=lineGraph,monthcolumnname='month')
         fig = go.Figure()
-        fig = px.line(lineGraph, x="month", y="transactionId", labels = {'month': 'Month', 'transactionId': 'Transactions'})
+        fig = px.line(lineGraph, x="month", y="transactionId", labels = {'month': 'Month', 'transactionId': 'Transactions'}, title = 'Monthwise Transactions via Store')
+        fig.update_layout(
+            height = 300,)
         st.plotly_chart(fig, use_container_width = True)
 
     with col2:
-        st.write('Transactions Count on Online')
+        # st.write('Transactions Count on Online')
         # To Calculate Transaction count of Online Visitors
         onlineTransactionCount  = transactionsDf[transactionsDf['modeOfVisit'] == 'Online']['transactionId'].count()
-        st.header(onlineTransactionCount)
+        # st.header(onlineTransactionCount)
+
+        st.markdown("<h5 style='text-align: center;'>Transactions Count on Online</h5>", unsafe_allow_html=True)
+        st.markdown("<h2 style='text-align: center; '>"+str(onlineTransactionCount)+"</h2>", unsafe_allow_html=True)
+        
+
         lineGraph = pd.DataFrame(transactionsDf[transactionsDf['modeOfVisit']=='Online'].groupby('month').count()['transactionId']).reset_index()
         lineGraph = Sort_Dataframeby_Month(df=lineGraph,monthcolumnname='month')
         fig = go.Figure()
-        fig = px.line(lineGraph, x="month", y="transactionId", labels = {'month': 'Month', 'transactionId': 'Transactions'})
+        fig = px.line(lineGraph, x="month", y="transactionId", labels = {'month': 'Month', 'transactionId': 'Transactions'}, title = 'Monthwise Transactions via Online')
+        fig.update_layout(
+            height = 300,)
         st.plotly_chart(fig, use_container_width = True)
-    
+    # st.write('Overall Average units per Customer: Store')
+    OverallAvgQuantitySold = pd.DataFrame(transactionsDf.groupby('month').mean()['quantity']).reset_index()
+    # st.header(round(OverallAvgQuantitySold['quantity'].mean(),2))
+
+    st.markdown("<h5 style='text-align: center;'>Overall Average units per Customer</h5>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; '>"+str(round(OverallAvgQuantitySold['quantity'].mean(),2))+"</h2>", unsafe_allow_html=True)
+        
+
+
     OverallAvgQuantitySold = Sort_Dataframeby_Month(pd.DataFrame(transactionsDf.groupby('month').mean()['quantity']).reset_index(), monthcolumnname = 'month')
     fig = go.Figure()
-    fig = px.line(OverallAvgQuantitySold, x="month", y="quantity", labels = {'month': 'Month', 'transactionId': 'Transactions'})
+    fig = px.line(OverallAvgQuantitySold, x="month", y="quantity", labels = {'month': 'Month', 'transactionId': 'Transactions'}, title = 'Monthwise Average Units per Customer')
+    fig.update_layout(
+            height = 300,)
     st.plotly_chart(fig, use_container_width = True)
 
     col1, col2 = st.columns(2)
     with col1:
         # Average Quantity mean by Store
-        st.write('Average units per Customer: Store')
-        st.header(round(transactionsDf[transactionsDf['modeOfVisit'] == 'Store']['quantity'].mean(), 2))
+        # st.write('Average units per Customer: Store')
+        # st.header(round(transactionsDf[transactionsDf['modeOfVisit'] == 'Store']['quantity'].mean(), 2))
+
+        st.markdown("<h5 style='text-align: center;'>Average units per Customer: Store</h5>", unsafe_allow_html=True)
+        st.markdown("<h2 style='text-align: center; '>"+str(round(transactionsDf[transactionsDf['modeOfVisit'] == 'Store']['quantity'].mean(), 2))+"</h2>", unsafe_allow_html=True)
+        
+
+
         avgQuantityOfStore = Sort_Dataframeby_Month(pd.DataFrame(transactionsDf[transactionsDf['modeOfVisit'] == 'Store'].groupby(['month']).mean()['quantity']).reset_index(), monthcolumnname = 'month')
         fig = go.Figure()
-        fig = px.line(avgQuantityOfStore, x="month", y="quantity", labels = {'month': 'Month', 'quantity': 'Average Quantity'})
+        fig = px.line(avgQuantityOfStore, x="month", y="quantity", labels = {'month': 'Month', 'quantity': 'Average Quantity'}, title = 'Monthwise Average Units per Customer: Store')
+        fig.update_layout(
+            height = 300,)
         st.plotly_chart(fig, use_container_width = True)
 
     with col2:  
         # Monthwise Average Quantity by Online DataFrame
-        st.write('Average units per Customer: Online')
-        st.header(round(transactionsDf[transactionsDf['modeOfVisit'] == 'Online']['quantity'].mean(), 2))
+
+        st.markdown("<h5 style='text-align: center;'>Average units per Customer: Online</h5>", unsafe_allow_html=True)
+        st.markdown("<h2 style='text-align: center; '>"+str(round(transactionsDf[transactionsDf['modeOfVisit'] == 'Online']['quantity'].mean(), 2))+"</h2>", unsafe_allow_html=True)
+        
         avgQuantityOfOnline = Sort_Dataframeby_Month(pd.DataFrame(transactionsDf[transactionsDf['modeOfVisit'] == 'Online'].groupby(['month']).mean()['quantity']).reset_index(), monthcolumnname = 'month')
         fig = go.Figure()
-        fig = px.line(avgQuantityOfOnline, x="month", y="quantity", labels = {'month': 'Month', 'quantity': 'Average Quantity'})
+        fig = px.line(avgQuantityOfOnline, x="month", y="quantity", labels = {'month': 'Month', 'quantity': 'Average Quantity'}, title = 'Monthwise Average Units per Customer: Online')
+        fig.update_layout(
+            height = 300,)
         st.plotly_chart(fig, use_container_width = True)
+
+
 
 elif sideBarSelection == 'Inventory Control':
     st.markdown("<h2 style='text-align: center; color: black;'>Inventory Control Management</h2>", unsafe_allow_html=True)
@@ -327,7 +396,7 @@ elif sideBarSelection == 'Inventory Control':
     fig = px.area(InventoryDf, x=InventoryDf['ABC rank'].to_list(), y=InventoryDf["Cummulative share"].to_list(), color=InventoryDf["ABC ?"].to_list() )
 
     fig.update_layout(
-        xaxis_title="Quantity Of Items In WH",
+        xaxis_title="Quantity Of Items In Inventory",
         yaxis_title="Revenue Share",
         autosize=True,
         margin=dict(
