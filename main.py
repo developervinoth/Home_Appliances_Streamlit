@@ -37,7 +37,7 @@ transactionsDf, InventoryDf, visitorsDf, df_revenue, df_product, df_expense, df_
 st.sidebar.header('Home Appliances Dashboard')
 st.markdown("")
 st.markdown("")
-sideBarSelection = st.sidebar.selectbox(options=['EMI Simulator','Customer Segmentation' ,'Foot Traffic vs Digital Traffic', 'Inventory Control', 'Financial Simulator'], label='Select Page')
+sideBarSelection = st.sidebar.selectbox(options=['Customer Segmentation' ,'Foot Traffic vs Digital Traffic', 'Inventory Control', 'Financial Simulator','EMI Simulator'], label='Select Page')
 
 print(sideBarSelection)
 
