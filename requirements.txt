@@ -1,0 +1,6 @@
+pandas==1.3.4
+plotly==5.7.0
+python_dateutil==2.8.2
+sort_dataframeby_monthorweek==0.4
+sorted_months_weekdays==0.2
+streamlit==1.8.1
